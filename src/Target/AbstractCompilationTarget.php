@@ -7,8 +7,10 @@ namespace RulerZ\Target;
 use RulerZ\Compiler\Context;
 use RulerZ\Compiler\CompilationTarget;
 use RulerZ\Model;
+use RulerZ\Target\Operators\CompileTimeOperator;
 use RulerZ\Target\Operators\Definitions as OperatorsDefinitions;
 use RulerZ\Target\Operators\Definitions;
+use RulerZ\Target\Operators\RuntimeOperator;
 
 /**
  * Generic visitor intended to be extended.
@@ -47,6 +49,10 @@ abstract class AbstractCompilationTarget implements CompilationTarget
     {
         $visitor = $this->createVisitor($compilationContext);
         $compiledCode = $visitor->visit($rule);
+
+        if ($compiledCode instanceof CompileTimeOperator || $compiledCode instanceof RuntimeOperator) {
+            $compiledCode = $compiledCode->format(false);
+        }
 
         return new Model\Executor(
             $this->getExecutorTraits(),
