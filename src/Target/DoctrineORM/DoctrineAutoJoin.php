@@ -183,4 +183,9 @@ class DoctrineAutoJoin
     {
         return $this->aliasMap[$entity];
     }
+
+    public function getAliasesForEntity(string $entity): array
+    {
+        return $this->knownEntities[$entity];
+    }
 }
