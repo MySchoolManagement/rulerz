@@ -42,6 +42,22 @@ class ObjectContext implements \ArrayAccess
      */
     public function offsetGet($id)
     {
+        if (is_array($this->object)) {
+            $result = [];
+
+            foreach ($this->object as $element) {
+                $value = $this->accessor->getValue($element, $id);
+
+                if ($value === null) {
+                    continue;
+                }
+
+                $result[] = $value;
+            }
+
+            return $result;
+        }
+
         $value = $this->accessor->getValue($this->object, $id);
 
         if (is_scalar($value) || $value === null) {
