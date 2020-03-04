@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace RulerZ\Target\DoctrineORM;
 
 use Doctrine\ORM\EntityManagerInterface as EntityManager;
+use function Functional\first;
 
 class DoctrineAutoJoin
 {
@@ -47,6 +48,7 @@ class DoctrineAutoJoin
                 $relation = $this->getRelation($attribute, $this->getEntity($fromAlias));
 
                 $this->saveAlias($relation['targetEntity'], $relation['fieldName'], $join->getAlias(), $fromAlias);
+                $this->saveDetectedJoin($relation['targetEntity'], $relation, $fromAlias);
             }
         }
     }
@@ -85,12 +87,7 @@ class DoctrineAutoJoin
                     $alias = sprintf('_%d_%s', count($this->knownEntities, COUNT_RECURSIVE), $dimension);
 
                     $this->saveAlias($targetEntity, $association['fieldName'], $alias, $lastAlias);
-
-                    $this->detectedJoins[] = [
-                        'root' => $lastAlias,
-                        'column' => $dimension,
-                        'as' => $alias = $this->getAlias($targetEntity, $association['fieldName'], $lastAlias),
-                    ];
+                    $alias = $this->saveDetectedJoin($targetEntity, $association, $lastAlias);
                 } else {
                     $alias = $this->getAlias($targetEntity, $association['fieldName'], $lastAlias);
                 }
@@ -187,5 +184,26 @@ class DoctrineAutoJoin
     public function getAliasesForEntity(string $entity): array
     {
         return $this->knownEntities[$entity];
+    }
+
+    private function saveDetectedJoin(string $targetEntity, array $association, string $lastAlias): string
+    {
+        $alias = $this->getAlias($targetEntity, $association['fieldName'], $lastAlias);
+
+        $existingJoin = first($this->detectedJoins, function(array $join) use ($alias, $association, $lastAlias) {
+            return $join['as'] === $alias
+                && $join['column'] === $association['fieldName']
+                && $join['root'] === $lastAlias;
+        });
+
+        if (null === $existingJoin) {
+            $this->detectedJoins[] = [
+                'as' => $alias,
+                'column' => $association['fieldName'],
+                'root' => $lastAlias,
+            ];
+        }
+
+        return $alias;
     }
 }
