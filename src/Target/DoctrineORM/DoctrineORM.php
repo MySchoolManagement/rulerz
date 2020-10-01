@@ -43,8 +43,16 @@ class DoctrineORM extends AbstractSqlTarget
     {
         $aliases = implode('', $context['root_aliases']);
         $entities = implode('', $context['root_entities']);
+        $joined = '';
 
-        return $aliases.$entities;
+        /** @var Expr\Join[] $joins */
+        foreach ($context['joins'] as $rootEntity => $joins) {
+            foreach ($joins as $join) {
+                $joined .= $join->getAlias().$join->getJoin();
+            }
+        }
+
+        return $aliases.$entities.$joined;
     }
 
     /**
