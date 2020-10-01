@@ -76,6 +76,22 @@ class Composite implements Specification
         return $mergedParameters;
     }
 
+    public function getSpecifications(): array
+    {
+        return $this->specifications;
+    }
+
+    public function contains(string $class): bool
+    {
+        foreach ($this->specifications as $specification) {
+            if (get_class($specification) === $class) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * Adds a new specification.
      *
