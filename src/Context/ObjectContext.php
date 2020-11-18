@@ -55,7 +55,7 @@ class ObjectContext implements \ArrayAccess
                 $result[] = $value;
             }
 
-            return $result;
+            return new static($result);
         }
 
         $value = $this->accessor->getValue($this->object, $id);
