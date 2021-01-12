@@ -42,10 +42,10 @@ class ObjectContext implements \ArrayAccess
      */
     public function offsetGet($id)
     {
-        if (is_array($this->object)) {
+        if (is_array($this->object) || $this->object instanceof \Iterator) {
             $result = [];
 
-            foreach ($this->object as $element) {
+            foreach ($object as $element) {
                 $value = $this->accessor->getValue($element, $id);
 
                 if ($value === null) {
