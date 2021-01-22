@@ -45,7 +45,7 @@ class ObjectContext implements \ArrayAccess
         if (is_array($this->object) || $this->object instanceof \Iterator) {
             $result = [];
 
-            foreach ($object as $element) {
+            foreach ($this->object as $element) {
                 $value = $this->accessor->getValue($element, $id);
 
                 if ($value === null) {
