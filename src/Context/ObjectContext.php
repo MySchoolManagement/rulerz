@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace RulerZ\Context;
 
+use Ramsey\Uuid\UuidInterface;
 use Symfony\Component\PropertyAccess\PropertyAccess;
 
 class ObjectContext implements \ArrayAccess
@@ -42,25 +43,37 @@ class ObjectContext implements \ArrayAccess
      */
     public function offsetGet($id)
     {
-        if (is_array($this->object) || $this->object instanceof \Iterator) {
+        return $this->getValue($this->object, $id, true);
+    }
+
+    private function getValue($object, $id, bool $shouldWrap)
+    {
+        $thing = $object instanceof ObjectContext ? $object->getObject() : $object;
+
+        if (is_array($thing) || $thing instanceof \Iterator) {
             $result = [];
 
-            foreach ($this->object as $element) {
-                $value = $this->accessor->getValue($element, is_array($element) ? "[$id]" : $id);
+            foreach ($thing as $element) {
+                $value = $this->getValue($element, $id, false);
 
-                if ($value === null) {
+                if (null === $value) {
                     continue;
                 }
 
-                $result[] = $value;
+                // this might be wrong but it solves todays problem
+                if (is_iterable($value)) {
+                    $result = array_merge($result, $value instanceof \Iterator ? iterator_to_array($value) : $value);
+                } else {
+                    $result[] = $value;
+                }
             }
 
             return new static($result);
         }
 
-        $value = $this->accessor->getValue($this->object, $id);
+        $value = $this->accessor->getValue($object instanceof ObjectContext ? $object->getObject() : $object, $id);
 
-        if (is_scalar($value) || $value === null) {
+        if (! $shouldWrap || is_scalar($value) || $value instanceof UuidInterface || $value === null) {
             return $value;
         }
 
